@@ -1,3 +1,5 @@
 leads.db
+*.db
 call_log.db
 .venv/
+__pycache__

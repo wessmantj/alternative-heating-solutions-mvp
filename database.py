@@ -1,5 +1,6 @@
 import sqlite3
 from config import Config
+from typing import Optional, List
 
 def init_db():
     '''
@@ -23,7 +24,7 @@ def init_db():
             service TEXT,
             has_voicemail BOOLEAN DEFAULT 0,
             status TEXT DEFAULT 'new',
-            created_ad TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             notes TEXT
         )
     ''')
@@ -44,13 +45,74 @@ def init_db():
 
 
 
-def add_lead(phone, name, address, service):
-    # Insert new lead
-    pass
+def add_lead(customer_phone: str,
+             name: Optional[str] = None,
+             address: Optional[str] = None,
+             service: Optional[str] = None,
+             has_voicemail: bool = False) -> int:
+    """
+    Add a new lead to the database
+    
+    Args:
+        customer_phone: Customer's phone number (REQUIRED)
+        name: Customer name (optional - can be None)
+        address: Customer address (optional - can be None)
+        service: Service they need (optional - can be None)
+        has_voicemail: Whether they left voicemail (default False)
+    
+    Returns:
+        int: ID of the newly created lead
+    """
+    
+    connect = sqlite3.connect(Config.DATABASE_PATH)
+    cursor = connect.cursor()
 
-def get_todays_leads():
-    # Get all leads from today
-    pass
+    cursor.execute('''
+        INSERT INTO leads (
+            customer_phone, name, address, service, has_voicemail)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (customer_phone, name, address, service, has_voicemail))
+
+    lead_id = cursor.lastrowid
+
+    connect.commit()
+
+    connect.close()
+
+    return lead_id
+
+
+
+def get_todays_leads() -> List[dict]:
+    """
+    Get all leads from today, sorted by most recent first
+    
+    Returns:
+        List of dictionaries, each containing all lead info
+    """
+
+    connect = sqlite3.connect(Config.DATABASE_PATH)
+
+    # get results in dict format instead of tuples
+    connect.row_factory = sqlite3.Row
+
+    cursor = connect.cursor()
+
+    cursor.execute('''
+        SELECT * FROM leads
+        WHERE DATE(created_at) = DATE('now')
+        ORDER BY created_at DESC
+    ''')
+
+    # get all results
+    rows = cursor.fetchall()
+
+    # convert to list of dictionaries by iterating through the rows
+    leads = [dict(row) for row in rows]
+
+    connect.close()
+
+    return leads
 
 def mark_as_called(lead_id):
     # Update status to 'called_back'
