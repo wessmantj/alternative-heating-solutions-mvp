@@ -49,7 +49,7 @@ def add_lead(customer_phone: str,
              name: Optional[str] = None,
              address: Optional[str] = None,
              service: Optional[str] = None,
-             has_voicemail: bool = False) -> int:
+             has_voicemail: bool = False) -> Optional[int]:
     """
     Add a new lead to the database
     
@@ -114,10 +114,198 @@ def get_todays_leads() -> List[dict]:
 
     return leads
 
-def mark_as_called(lead_id):
-    # Update status to 'called_back'
-    pass
+def update_lead_status(lead_id: int, status: str) -> bool:
+    """
+    Update a lead's status
+    
+    Args:
+        lead_id: The lead's database ID
+        status: New status ('new', 'called_back', 'scheduled', 'closed')
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    connect = sqlite3.connect(Config.DATABASE_PATH)
+    cursor = connect.cursor()
 
-def should_send_text(phone):
-    # Check if we texted this number in last 24hrs
-    pass
+    cursor.execute('''
+        UPDATE leads
+        SET status = ?
+        WHERE id = ?
+        ''', (status, lead_id))
+    
+    rows_affected = cursor.rowcount
+
+    connect.commit()
+    connect.close()
+
+    return rows_affected > 0
+
+
+def should_send_text(phone_number: str) -> bool:
+    """
+    Check if we should send auto-text to this number
+    Prevents duplicate texts within 24 hours
+    
+    Args:
+        phone_number: Customer's phone number
+    
+    Returns:
+        bool: True if we should text, False if already texted recently
+    """
+    connect = sqlite3.connect(Config.DATABASE_PATH)
+    cursor = connect.cursor()
+
+    cursor.execute('''
+        SELECT * FROM call_log
+        WHERE phone_number = ?
+        AND texted_at > datetime('now', '-24 hours')
+    ''', (phone_number,))
+
+    recent_text = cursor.fetchone()
+
+    connect.close()
+
+    return recent_text is None
+
+
+def log_autotext(phone_number: str) -> None:
+    """
+    Log that we sent an auto-text to this number
+    
+    Args:
+        phone_number: Customer's phone number
+    """
+    
+    connect = sqlite3.connect(Config.DATABASE_PATH)
+    cursor = connect.cursor()
+    
+    cursor.execute('''
+        INSERT INTO call_log (phone_number)
+        VALUES (?)
+    ''', (phone_number,))
+    
+    connect.commit()
+    connect.close()
+
+
+def get_lead_by_id(lead_id: int) -> Optional[dict]:
+    """
+    Get a specific lead by ID
+    
+    Args:
+        lead_id: The lead's database ID
+    
+    Returns:
+        Dictionary with lead info, or None if not found
+    """
+    
+    connect = sqlite3.connect(Config.DATABASE_PATH)
+    connect.row_factory = sqlite3.Row
+
+    cursor = connect.cursor()
+
+    cursor.execute('''
+        SELECT * FROM leads
+        WHERE id = ? 
+    ''', (lead_id,))
+
+    row = cursor.fetchone()
+
+    connect.close()
+
+    if row:
+        return dict(row)
+    else:
+        return None
+    
+
+def add_lead_note(lead_id: int, note: str) -> bool:
+    """
+    Add a note to a lead (appends to existing notes)
+    
+    Args:
+        lead_id: The lead's database ID
+        note: Note text to add
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+
+    connect = sqlite3.connect(Config.DATABASE_PATH)
+    cursor = connect.cursor()
+
+    cursor.execute('SELECT notes FROM leads WHERE id = ?', (lead_id,))
+    row = cursor.fetchone()
+
+    if row is None:
+        # if row doesn't exist
+        connect.close()
+        return False
+
+    existing_notes = row[0] or ""
+    if existing_notes:
+        updated_notes = existing_notes + "\n" + note
+    else:
+        updated_notes = note
+    
+    cursor.execute('''
+        UPDATE leads
+        SET notes = ?
+        WHERE id = ?
+    ''', (updated_notes, lead_id))
+
+    connect.commit()
+    connect.close()
+
+    return True
+
+
+def get_stats() -> dict:
+    """
+    Get statistics for dashboard
+    Counts today's leads and breaks down by status
+    
+    Returns:
+        Dictionary with lead counts:
+        {
+            'total_leads_today': 8,
+            'new': 5,
+            'called_back': 2,
+            'scheduled': 1,
+            'closed': 0
+        }
+    """
+
+    connect = sqlite3.connect(Config.DATABASE_PATH)
+    cursor = connect.cursor()
+
+    cursor.execute('''
+        SELECT COUNT(*) FROM leads
+        WHERE DATE(created_at) = DATE('now')
+    ''')
+
+    total_today = cursor.fetchone()[0]
+
+    cursor.execute('''
+        SELECT status, COUNT(*) FROM leads
+        WHERE DATE(created_at) = DATE('now')
+        GROUP BY status
+    ''')
+
+    status_counts = cursor.fetchall()
+
+    connect.close()
+
+    stats = {
+        'total_leads_today': total_today,
+        'new': 0,
+        'called_back': 0,
+        'scheduled': 0,
+        'closed': 0
+    }
+
+    for status, count in status_counts:
+        stats[status] = count
+
+    return stats
