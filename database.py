@@ -25,6 +25,8 @@ def init_db():
             has_voicemail BOOLEAN DEFAULT 0,
             status TEXT DEFAULT 'new',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            original_message TEXT,
+            voicemail_url TEXT,
             notes TEXT
         )
     ''')
@@ -49,7 +51,9 @@ def add_lead(customer_phone: str,
              name: Optional[str] = None,
              address: Optional[str] = None,
              service: Optional[str] = None,
-             has_voicemail: bool = False) -> Optional[int]:
+             has_voicemail: bool = False,
+             voicemail_url: Optional[str] = None,
+             original_message: Optional[str]= None) -> Optional[int]:
     """
     Add a new lead to the database
     
@@ -69,9 +73,9 @@ def add_lead(customer_phone: str,
 
     cursor.execute('''
         INSERT INTO leads (
-            customer_phone, name, address, service, has_voicemail)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (customer_phone, name, address, service, has_voicemail))
+            customer_phone, name, address, service, has_voicemail, voicemail_url, original_message)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (customer_phone, name, address, service, has_voicemail, voicemail_url, original_message))
 
     lead_id = cursor.lastrowid
 
