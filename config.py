@@ -18,4 +18,4 @@ class Config:
 
     # auto-text settings
     RESPONSE_TIME_HOURS = 3
-    DUPLICATE_TEXT_WINDOW = timedelta(hours=24) # don't text back same number within 24hrs
+    DUPLICATE_TEXT_WINDOW = timedelta(hours=12) # don't text back same number within 24hrs

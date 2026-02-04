@@ -29,7 +29,7 @@ def parse_customer_response(message: str) -> Tuple[Optional[str], Optional[str],
     address = None
     service = None
 
-    # TODO: Try to identify name, address, service
+    # identify name, address, service
     for line in lines:
         line_lower = line.lower()
     
