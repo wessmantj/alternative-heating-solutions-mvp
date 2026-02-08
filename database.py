@@ -87,7 +87,7 @@ def add_lead(customer_phone: str,
 
 
 
-def get_todays_leads() -> List[dict]:
+def get_todays_leads(hours: int = 24) -> List[dict]:
     """
     Get all leads from today, sorted by most recent first
     
@@ -313,3 +313,31 @@ def get_stats() -> dict:
         stats[status] = count
 
     return stats
+
+def get_recent_leads(hours: int = 72) -> List[dict]:
+    """
+    Get all leads from the last X hours, sorted oldest to newest (queue style)
+    
+    Args:
+        hours: Number of hours to look back (default 72 = 3 days)
+    
+    Returns:
+        List of dictionaries, each containing all lead info
+    """
+    
+    connect = sqlite3.connect(Config.DATABASE_PATH)
+    connect.row_factory = sqlite3.Row
+    cursor = connect.cursor()
+    
+    cursor.execute('''
+        SELECT * FROM leads
+        WHERE created_at > datetime('now', '-' || ? || ' hours')
+        ORDER BY created_at ASC
+    ''', (hours,))
+    
+    rows = cursor.fetchall()
+    leads = [dict(row) for row in rows]
+    
+    connect.close()
+    
+    return leads
