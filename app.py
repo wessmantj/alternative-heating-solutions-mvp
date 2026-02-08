@@ -14,9 +14,12 @@ with app.app_context():
 
 @app.route('/')
 def dashboard():
-    """Main dashboard showing today's leads"""
-    leads = get_todays_leads()
-    stats = get_stats()
+    """Main dashboard showing last 72 hours of leads"""
+    from database import get_recent_leads
+    
+    leads = get_recent_leads(hours=72)  # Last 3 days
+    stats = get_stats()  # Still shows today's stats
+    
     return render_template('dashboard.html', leads=leads, stats=stats)
 
 @app.route('/toggle-status/<int:lead_id>')
