@@ -4,9 +4,14 @@ Main Flask application
 from flask import Flask, render_template, redirect, url_for, request, jsonify
 from database import get_todays_leads, update_lead_status, get_stats, init_db, get_lead_by_id, add_lead_note
 from config import Config
+from twilio.twiml.voice_response import VoiceResponse
+from twilio.rest import Client
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# Initialize Twilio client
+twilio_client = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
 
 # Initialize database on first run
 with app.app_context():

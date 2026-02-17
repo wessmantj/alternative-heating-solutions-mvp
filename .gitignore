@@ -3,3 +3,4 @@ leads.db
 call_log.db
 .venv/
 __pycache__
+config.py
