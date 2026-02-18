@@ -341,3 +341,29 @@ def get_recent_leads(hours: int = 72) -> List[dict]:
     connect.close()
     
     return leads
+
+def update_lead_original_message(lead_id: int, message: str) -> bool:
+    """
+    Update the original_message field for a lead
+    
+    Args:
+        lead_id: The lead's database ID
+        message: The transcribed message text
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    connect = sqlite3.connect(Config.DATABASE_PATH)
+    cursor = connect.cursor()
+    
+    cursor.execute('''
+        UPDATE leads
+        SET original_message = ?
+        WHERE id = ?
+    ''', (message, lead_id))
+    
+    rows_affected = cursor.rowcount
+    connect.commit()
+    connect.close()
+    
+    return rows_affected > 0
