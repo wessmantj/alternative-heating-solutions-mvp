@@ -1,5 +1,5 @@
 from typing import Tuple, Optional
-from app.config import Config
+from config import Config
 from datetime import datetime
 
 

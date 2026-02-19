@@ -9,7 +9,7 @@ from app.services.database import (
     get_lead_by_id
 )
 from app.services.parser import parse_customer_response
-from app.config import Config
+from config import Config
 
 webhooks_bp = Blueprint('webhooks', __name__, url_prefix='/webhooks')
 

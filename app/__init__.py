@@ -1,5 +1,11 @@
+import os
+import sys
+
+# Add project root to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from flask import Flask
-from app.config import Config
+from config import Config
 from twilio.rest import Client
 
 
