@@ -1,5 +1,5 @@
 import sqlite3
-from config import Config
+from app import Config
 from typing import Optional, List
 
 def init_db():

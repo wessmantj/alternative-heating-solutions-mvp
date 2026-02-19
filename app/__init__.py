@@ -1,12 +1,27 @@
 import os
-import sys
-
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from flask import Flask
-from config import Config
 from twilio.rest import Client
+from dotenv import load_dotenv
+from datetime import timedelta
+
+load_dotenv()
+
+class Config:
+    # database
+    DATABASE_PATH = 'leads.db'
+    # flask
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-later')
+    # business settings (not sensitive)
+    BUSINESS_NAME = "Alternative Heating Solutions"
+    BUSINESS_PHONE = "+1XXXXXXXXXX"
+    TWILIO_PHONE = "+18886038816"
+    # sensitive — pulled from .env
+    PERSONAL_PHONE = os.getenv('PERSONAL_PHONE')
+    TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+    TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+    # auto-text settings
+    RESPONSE_TIME_HOURS = 3
+    DUPLICATE_TEXT_WINDOW = timedelta(hours=24)
 
 
 def create_app():
