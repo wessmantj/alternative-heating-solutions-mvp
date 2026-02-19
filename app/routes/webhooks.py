@@ -47,7 +47,7 @@ def voicemail_complete():
     print(f"[VOICEMAIL] Received from {from_number}")
     print(f"[VOICEMAIL] Recording URL: {recording_url}")
     
-    # Add to database immediately (transcription comes later)
+    # Add to database 
     lead_id = add_lead(
         customer_phone=from_number,
         has_voicemail=True,
@@ -124,8 +124,8 @@ def handle_incoming_sms():
     # Notify dad
     send_dad_notification(lead_id, from_number, "New lead via SMS")
     
-    # Respond to customer (optional confirmation)
-    response = MessagingResponse()  # ✅ FIXED: Was VoiceResponse, now MessagingResponse
+    # Respond to customer 
+    response = MessagingResponse()
     response.message(
         f"Thank you! We received your information and will call you back "
         f"within {Config.RESPONSE_TIME_HOURS} hours from {Config.BUSINESS_PHONE}."
@@ -151,7 +151,7 @@ def send_dad_notification(lead_id, phone_number, message_type, include_transcrip
         return
     
     # Build notification text
-    notification_text = f"🔔 {message_type.upper()}\n\n"
+    notification_text = f"{message_type.upper()}\n\n"
     notification_text += f"From: {phone_number}\n"
     
     if lead.get('name'):
